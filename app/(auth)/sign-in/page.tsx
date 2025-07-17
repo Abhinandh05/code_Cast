@@ -25,7 +25,7 @@ const Page = () => {
                           <div>
                               <h2>Abhinandh</h2>
                               <p><span className='text-purple-700'>J'S</span>Developer</p>
-                          </div>
+                          </div>c
 
                       </article>
                   </section>
