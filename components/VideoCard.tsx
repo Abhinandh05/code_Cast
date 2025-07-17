@@ -1,3 +1,4 @@
+"use client"
 import React from 'react'
 import Link from "next/link";
 import Image from "next/image";
@@ -15,8 +16,25 @@ const VideoCard = ({id, title, thumbnail, userImg, username, createdAt, views, v
                             <p>{visibility}</p>
                         </figcaption>
                     </figure>
+                    <aside>
+                        <Image src='/assets/icons/eye.svg' alt='eye icon' width={16} height={16} />
+                        <span>{views}</span>
+                    </aside>
                 </div>
+                <h2>{title} - {''} {createdAt.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                })}</h2>
             </article>
+            <button onClick={() => {}} className='copy-btn'>
+                <Image src='/assets/icons/link.svg' alt='copy'  width={18} height={18} />
+            </button>
+            {duration && (
+                <div className='duration'>
+                    {Math.ceil(duration / 60)} min
+                </div>
+            )}
         </Link>
 
     )
