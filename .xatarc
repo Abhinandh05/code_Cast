@@ -1,0 +1,6 @@
+{
+  "databaseURL": "https://Abhinandh-C-s-workspace-ati4qh.eu-central-1.xata.sh/db/abhi_codecast",
+  "codegen": {
+    "output": "src/xata.ts"
+  }
+}
