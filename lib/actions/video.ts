@@ -1,15 +1,16 @@
 'use server';
 
-import {apiFetch, getEnv, withErrorHandling} from "@/lib/utils";
+import {apiFetch, doesTitleMatch, getEnv, withErrorHandling} from "@/lib/utils";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {BUNNY} from "@/constants";
 import {db} from "@/drizzle/db";
-import {videos} from "@/drizzle/schema";
+import {session, videos} from "@/drizzle/schema";
 import {revalidatePath} from "next/cache";
 import {fixedWindow} from "arcjet";
 import aj from "@/lib/arcjet";
 import {request} from "@arcjet/next";
+import {and, eq, or} from "drizzle-orm";
 
 
 const VIDEO_STREAM_BASE_URL= BUNNY.STREAM_BASE_URL;
@@ -120,6 +121,30 @@ export const saveVideoDetails =  withErrorHandling( async (videoDetails: VideoDe
         videoId: videoDetails.videoId,
 
     }
+
+})
+
+export const getAllVideos = withErrorHandling(  async (searchQuery: string ='',
+                                                       sortFilter?: string,
+                                                       pageNumber:number=1,
+                                                       pageSize:number=8,
+                                                       ) =>{
+    const session = await auth.api.getSession({headers: await headers()})
+    const currentUserId = session?.user.id;
+
+    const canSeeTheVideos = or(
+        eq(videos.visibility,'public'),
+        eq(videos.userId, currentUserId!)
+    );
+
+    const whereCondition = searchQuery.trim()
+    ? and(
+        canSeeTheVideos,
+            doesTitleMatch(videos, searchQuery)
+        ):doesTitleMatch
+
+
+
 
 })
 
