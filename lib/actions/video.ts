@@ -1,16 +1,17 @@
 'use server';
 
-import {apiFetch, doesTitleMatch, getEnv, withErrorHandling} from "@/lib/utils";
+import {apiFetch, doesTitleMatch, getEnv, getOrderByClause, withErrorHandling} from "@/lib/utils";
 import {auth} from "@/lib/auth";
 import {headers} from "next/headers";
 import {BUNNY} from "@/constants";
 import {db} from "@/drizzle/db";
-import {session, videos} from "@/drizzle/schema";
+import {session, user, videos} from "@/drizzle/schema";
 import {revalidatePath} from "next/cache";
 import {fixedWindow} from "arcjet";
 import aj from "@/lib/arcjet";
 import {request} from "@arcjet/next";
-import {and, eq, or} from "drizzle-orm";
+import {and, eq, or, sql} from "drizzle-orm";
+import {build} from "esbuild";
 
 
 const VIDEO_STREAM_BASE_URL= BUNNY.STREAM_BASE_URL;
@@ -33,6 +34,16 @@ const getSessionUserId = async () :Promise<string> => {
 const revalidatePaths = (paths:string[]) => {
     paths.forEach((path) => revalidatePath(path))
 
+}
+
+const buildVideoWithUserQuery = () =>{
+    return db
+        .select({
+            video: videos,
+            user: {id: user.id, name: user.name, image: user.image},
+        })
+        .from(videos)
+        .leftJoin(user,eq(videos.userId, user.id))
 }
 
 const validateWithArcjet = async (fingerprint: string) =>{
@@ -124,27 +135,54 @@ export const saveVideoDetails =  withErrorHandling( async (videoDetails: VideoDe
 
 })
 
-export const getAllVideos = withErrorHandling(  async (searchQuery: string ='',
-                                                       sortFilter?: string,
-                                                       pageNumber:number=1,
-                                                       pageSize:number=8,
-                                                       ) =>{
-    const session = await auth.api.getSession({headers: await headers()})
-    const currentUserId = session?.user.id;
+export const getAllVideos = withErrorHandling(
+    async (
+        searchQuery: string = '',
+        sortFilter?: string,
+        pageNumber: number = 1,
+        pageSize: number = 8
+    ) => {
+        const session = await auth.api.getSession({
+            headers: await headers(),
+        });
+        const currentUserId = session?.user.id;
 
-    const canSeeTheVideos = or(
-        eq(videos.visibility,'public'),
-        eq(videos.userId, currentUserId!)
-    );
+        const canSeeTheVideos = or(
+            eq(videos.visibility, 'public'),
+            eq(videos.userId, currentUserId!)
+        );
 
-    const whereCondition = searchQuery.trim()
-    ? and(
-        canSeeTheVideos,
-            doesTitleMatch(videos, searchQuery)
-        ):doesTitleMatch
+        const whereCondition =
+            searchQuery.trim() !== ''
+                ? and(canSeeTheVideos, doesTitleMatch(videos, searchQuery))
+                : canSeeTheVideos; // previously it returned the function reference
 
+        const [{ totalCount }] = await db
+            .select({ totalCount: sql<number>`count(*)` })
+            .from(videos)
+            .where(whereCondition);
 
+        const totalVideos = Number(totalCount || 0);
+        const totalPages = Math.ceil(totalVideos / pageSize);
 
+        const videoRecords = await buildVideoWithUserQuery()
+            .where(whereCondition)
+            .orderBy(
+                sortFilter
+                    ? getOrderByClause(sortFilter)
+                    : sql`${videos.createdAt} DESC`
+            )
+            .limit(pageSize) // lowercase 'limit'
+            .offset((pageNumber - 1) * pageSize);
 
-})
-
+        return {
+            videos: videoRecords,
+            pagination: {
+                currentPage: pageNumber,
+                totalPages,
+                totalVideos,
+                pageSize,
+            },
+        };
+    }
+);
