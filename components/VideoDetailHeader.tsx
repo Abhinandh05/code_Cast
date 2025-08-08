@@ -1,17 +1,25 @@
 'use client'
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import {useRouter} from "next/navigation";
 import {daysAgo} from "@/lib/utils";
 import Image from "next/image";
 
-const VideoDetailHeader = ({title, createdAt,userImg, username, videoId, ownerId, visibility, thumbnailUrl} :VideoDetailHeaderProps) => {
+const VideoDetailHeader = ({title, createdAt,userImg, username, videoId, ownerId, visibility, thumbnailUrl, id} :VideoDetailHeaderProps) => {
     const router = useRouter();
     const [copied, setCopied] = useState(false)
     const handleCopyLink = () =>{
-        navigator.clipboard.writeText(`${window.location.origin}/video/${videoId}`);
+        navigator.clipboard.writeText(`${window.location.origin}/video/${id}`);
 
         setCopied(true);
     }
+
+    useEffect(() => {
+      const changedChecked =  setTimeout(() =>{
+        if (copied) setCopied(false)
+
+        },2000)
+        return () => clearTimeout(changedChecked)
+    }, [copied]);
 
 
     return (

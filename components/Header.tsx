@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {ICONS} from "@/constants";
 import DropdownList from "@/components/DropdownList";
+import RecordScreen from "@/components/RecordScreen";
 
 const Header = ({subHeader, title, userImg}:SharedHeaderProps) => {
     return (
@@ -24,12 +25,7 @@ const Header = ({subHeader, title, userImg}:SharedHeaderProps) => {
                        <Image src='/assets/icons/upload.svg' alt= 'upload' width={16} height={16} />
                         <span>Upload a Video</span>
                     </Link>
-                    <div className='record'>
-                        <button className='primary-btn'>
-                            <Image src={ICONS.record} alt='record' width={16} height={16} />
-                            <span>Record a Video</span>
-                        </button>
-                    </div>
+                  <RecordScreen />
 
                 </aside>
 
