@@ -217,8 +217,8 @@ declare interface ExtendedMediaStream extends MediaStream {
 }
 
 declare interface SharedHeaderProps {
-  subHeader: string;
-  title: string;
+  subHeader: string | null;
+  title: string | null;
   userImg?: string;
 }
 

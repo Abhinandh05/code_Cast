@@ -34,6 +34,21 @@ const RecordScreen = () => {
         }
   }
   const goToUpload = () =>{
+        if (!recordedBlob) return;
+        const url = URL.createObjectURL(recordedBlob);
+        sessionStorage.setItem("recordedVideo",
+            JSON.stringify({
+                url,
+                name: 'screen-recording.webm',
+                type: recordedBlob.type,
+                size:recordedBlob.size,
+                duration:recordingDuration || 0,
+
+            })
+        );
+        router.push("/upload");
+        closeModal();
+
 
   }
 
@@ -45,7 +60,7 @@ const RecordScreen = () => {
             </button>
             {isOpen && (
                 <section className='dialog'>
-                    <div className='overlay-record' onClick={closeModal}>
+                    <div className='overlay-record' onClick={closeModal} />
                         <div className='dialog-content'>
                             <figure>
                                 <h3>Screen Recording</h3>
@@ -95,7 +110,7 @@ const RecordScreen = () => {
                                 )}
                             </div>
 
-                        </div>
+
 
                     </div>
 
